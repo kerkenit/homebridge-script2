@@ -5,6 +5,7 @@ var exec = require('child_process').exec;
 var assign = require('object-assign');
 var fileExists = require('file-exists');
 var chokidar = require('chokidar');
+const fs = require('fs');
 
 module.exports = function(homebridge) {
   Service = homebridge.hap.Service;
@@ -33,7 +34,7 @@ function script2Accessory(log, config) {
   //this.exactMatch = config['exact_match'] || true;
 }
 
-/* 
+/*
   script2Accessory.prototype.matchesString = function(match) {
   if(this.exactMatch) {
     return (match === this.onValue);
@@ -58,7 +59,7 @@ script2Accessory.prototype.setState = function(powerOn, callback) {
 
 script2Accessory.prototype.getState = function(callback) {
   var accessory = this;
-  
+
   if (this.fileState) {
     var flagFile = fileExists.sync(this.fileState);
     accessory.log('State of ' + accessory.name + ' is: ' + flagFile);
@@ -93,7 +94,7 @@ script2Accessory.prototype.getServices = function() {
   if (this.stateCommand || this.fileState) {
     characteristic.on('get', this.getState.bind(this))
   };
-  
+
   if (this.fileState) {
     var fileCreatedHandler = function(path, stats){
       if (!this.currentState) {
@@ -101,14 +102,14 @@ script2Accessory.prototype.getServices = function() {
 	      switchService.setCharacteristic(Characteristic.On, true);
       }
     }.bind(this);
-  
+
     var fileRemovedHandler = function(path, stats){
       if (this.currentState) {
           this.log('File ' + path + ' was deleted');
 	      switchService.setCharacteristic(Characteristic.On, false);
 	  }
     }.bind(this);
-  
+
     var watcher = chokidar.watch(this.fileState, {alwaysStat: true});
     watcher.on('add', fileCreatedHandler);
     watcher.on('unlink', fileRemovedHandler);
